@@ -1,0 +1,20 @@
+# Credentials and secrets — NEVER commit
+credentials/
+*.credentials
+*.token
+
+# Config with real API keys — use template instead
+gemini_config.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

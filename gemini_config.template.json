@@ -1,0 +1,54 @@
+{
+  "_comment": "Gemini API configuration for PRIME ecosystem. Copy to gemini_config.json and fill in your keys.",
+  "_setup": "Get API key from https://aistudio.google.com/app/apikey | Get Jules key from jules.google Settings",
+  "api_key": "PASTE_YOUR_GEMINI_API_KEY_HERE",
+  "jules_api_key": "PASTE_YOUR_JULES_API_KEY_HERE",
+  "default_model": "gemini-2.5-flash",
+  "models": {
+    "flash_lite": {
+      "id": "gemini-2.5-flash-lite",
+      "use_case": "Bulk classification, simple extraction, routine labeling",
+      "input_cost_per_1m": 0.10,
+      "output_cost_per_1m": 0.40
+    },
+    "flash_2": {
+      "id": "gemini-2.0-flash",
+      "use_case": "Fast general tasks, document summarization, data parsing",
+      "input_cost_per_1m": 0.10,
+      "output_cost_per_1m": 0.40
+    },
+    "flash_25": {
+      "id": "gemini-2.5-flash",
+      "use_case": "Default workhorse — good quality, low cost, thinking capability",
+      "input_cost_per_1m": 0.30,
+      "output_cost_per_1m": 2.50
+    },
+    "pro_25": {
+      "id": "gemini-2.5-pro",
+      "use_case": "Complex reasoning, analysis, research synthesis",
+      "input_cost_per_1m": 1.25,
+      "output_cost_per_1m": 10.00
+    },
+    "flash_3": {
+      "id": "gemini-3-flash-preview",
+      "use_case": "Latest flash model — best quality/cost ratio",
+      "input_cost_per_1m": 0.50,
+      "output_cost_per_1m": 3.00
+    },
+    "pro_3": {
+      "id": "gemini-3-pro-preview",
+      "use_case": "Frontier reasoning — only for hardest problems",
+      "input_cost_per_1m": 2.00,
+      "output_cost_per_1m": 12.00
+    }
+  },
+  "accounts": {
+    "primary_email": {
+      "plan": "Google AI Ultra",
+      "monthly_cost": 249.99,
+      "cloud_credits_monthly": 100.00,
+      "ai_credits_monthly": 25000,
+      "storage_tb": 30
+    }
+  }
+}
