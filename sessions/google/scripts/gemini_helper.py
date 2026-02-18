@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import glob as globmod
 from pathlib import Path
 
@@ -70,15 +71,32 @@ def read_input(input_arg):
         # Handle PDFs
         if path.suffix.lower() == '.pdf':
             return {"type": "pdf", "path": str(path)}
+        # Handle audio files
+        if path.suffix.lower() in ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma']:
+            return {"type": "audio", "path": str(path)}
         # Handle text files
         with open(path, 'r', encoding='utf-8', errors='replace') as f:
             return {"type": "text", "content": f.read(), "source": str(path)}
     return {"type": "text", "content": input_arg, "source": "literal"}
 
 
+def retry_on_rate_limit(func, *args, max_retries=3, **kwargs):
+    """Retry API calls with exponential backoff on 429 rate limit errors."""
+    for attempt in range(max_retries + 1):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if '429' in str(e) and attempt < max_retries:
+                wait = 60 * (attempt + 1)  # 60s, 120s, 180s
+                print(f"Rate limited. Retrying in {wait}s (attempt {attempt + 1}/{max_retries})...", file=sys.stderr)
+                time.sleep(wait)
+            else:
+                raise
+
+
 def task_ask(client, model, prompt, **kwargs):
     """Simple question/answer."""
-    response = client.models.generate_content(model=model, contents=prompt)
+    response = retry_on_rate_limit(client.models.generate_content, model=model, contents=prompt)
     return response.text
 
 
