@@ -6,6 +6,11 @@ credentials/
 # Config with real API keys — use template instead
 gemini_config.json
 
+# Local data — Chroma vector DB, usage logs, sync bookmarks
+chroma_data/
+usage_log_*.jsonl
+usage_sync_bookmark.json
+
 # Python cache
 __pycache__/
 *.pyc

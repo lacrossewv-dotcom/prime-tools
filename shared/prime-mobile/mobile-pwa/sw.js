@@ -5,7 +5,7 @@
  * Caches static assets on install, serves from cache when available.
  */
 
-const CACHE_NAME = 'prime-mobile-v1';
+const CACHE_NAME = 'prime-mobile-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
   '/js/dashboard.js',
   '/js/inbox.js',
   '/js/chat.js',
+  '/js/usage.js',
   '/js/files.js',
   '/js/app.js',
   '/manifest.json',

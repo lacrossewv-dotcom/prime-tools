@@ -869,3 +869,126 @@ body {
   background: var(--border);
   border-radius: 2px;
 }
+
+/* --- Usage Dashboard --- */
+
+.usage-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.usage-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.usage-card-value {
+  font-size: 22px;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.usage-card-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+.usage-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.usage-chart-box {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.usage-chart-box h3 {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.chart-container {
+  position: relative;
+  height: 200px;
+}
+
+.chart-container-small {
+  height: 180px;
+}
+
+.usage-table-wrap {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.usage-table-wrap h3 {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.usage-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.usage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 500px;
+}
+
+.usage-table th {
+  text-align: left;
+  padding: 8px 6px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.usage-table td {
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.td-truncate {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usage-provider-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.provider-gemini { background: rgba(77, 171, 247, 0.2); color: #4dabf7; }
+.provider-claude { background: rgba(233, 30, 140, 0.2); color: #e91e8c; }
+.provider-groq { background: rgba(0, 204, 102, 0.2); color: #00cc66; }
+.provider-chroma { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+.provider-openai { background: rgba(255, 107, 53, 0.2); color: #ff6b35; }
+.provider-jules { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }

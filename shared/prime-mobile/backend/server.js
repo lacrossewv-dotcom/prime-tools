@@ -24,6 +24,7 @@ const sessionRoutes = require('./routes/sessions');
 const inboxRoutes = require('./routes/inbox');
 const chatRoutes = require('./routes/chat');
 const fileRoutes = require('./routes/files');
+const usageRoutes = require('./routes/usage');
 
 // Middleware
 const { authenticateJWT } = require('./middleware/auth');
@@ -74,6 +75,7 @@ app.use('/api/sessions', authenticateJWT, sessionRoutes);
 app.use('/api/inbox', authenticateJWT, inboxRoutes);
 app.use('/api/chat', authenticateJWT, chatRoutes);
 app.use('/api/files', authenticateJWT, fileRoutes);
+app.use('/api/usage', authenticateJWT, usageRoutes);
 
 // --- Serve PWA Static Files ---
 // In production, serve the PWA from the backend (same Cloud Run service)

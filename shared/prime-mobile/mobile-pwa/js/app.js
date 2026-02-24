@@ -28,6 +28,9 @@ function navigate(screenName) {
     case 'inbox':
       inbox.load();
       break;
+    case 'usage':
+      usage.load();
+      break;
     case 'files':
       files.load();
       break;

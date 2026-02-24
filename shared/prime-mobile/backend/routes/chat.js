@@ -11,6 +11,24 @@ const claudeAPI = require('../services/claudeAPI');
 const geminiAPI = require('../services/geminiAPI');
 const drive = require('../services/googleDrive');
 const parser = require('../services/primeParser');
+const sheets = require('../services/sheetsService');
+
+// Price table for cost estimation (per 1M tokens: [input, output])
+const PRICE_TABLE = {
+  'claude-opus-4-6': [15.00, 75.00],
+  'claude-sonnet-4-6': [3.00, 15.00],
+  'claude-sonnet-4-20250514': [3.00, 15.00],
+  'claude-haiku-4-5-20251001': [0.80, 4.00],
+  'gemini-2.5-flash': [0.30, 2.50],
+  'gemini-2.0-flash': [0.10, 0.40],
+  'gemini-2.5-pro': [1.25, 10.00],
+  'gemini-3-flash-preview': [0.50, 3.00],
+};
+
+function estimateCost(model, inputTokens, outputTokens) {
+  const prices = PRICE_TABLE[model] || [3.00, 15.00];
+  return (inputTokens * prices[0] / 1_000_000) + (outputTokens * prices[1] / 1_000_000);
+}
 
 /**
  * Build PRIME context data for chat.
@@ -120,6 +138,17 @@ router.post('/', async (req, res) => {
       provider: 'claude',
       timestamp: new Date().toISOString(),
     });
+
+    // Fire-and-forget: log usage to Sheet
+    sheets.appendUsageEntry({
+      provider: 'claude',
+      model: result.model,
+      task: 'chat',
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      cost: estimateCost(result.model, result.inputTokens, result.outputTokens),
+      source: 'prime-mobile-chat',
+    }).catch(err => console.error('[USAGE LOG] Claude chat:', err.message));
   } catch (err) {
     console.error('[CHAT/CLAUDE] Error:', err.message);
     res.status(500).json({ error: `Chat failed: ${err.message}` });
@@ -166,6 +195,17 @@ router.post('/gemini', async (req, res) => {
       provider: 'gemini',
       timestamp: new Date().toISOString(),
     });
+
+    // Fire-and-forget: log usage to Sheet
+    sheets.appendUsageEntry({
+      provider: 'gemini',
+      model: result.model,
+      task: 'chat',
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      cost: estimateCost(result.model, result.inputTokens, result.outputTokens),
+      source: 'prime-mobile-chat',
+    }).catch(err => console.error('[USAGE LOG] Gemini chat:', err.message));
   } catch (err) {
     console.error('[CHAT/GEMINI] Error:', err.message);
     res.status(500).json({ error: `Chat failed: ${err.message}` });

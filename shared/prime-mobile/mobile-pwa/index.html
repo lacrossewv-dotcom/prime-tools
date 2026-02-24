@@ -111,6 +111,71 @@
       </div>
     </div>
 
+    <!-- Usage Screen -->
+    <div id="screen-usage" class="screen">
+      <header class="app-header">
+        <h2>Usage</h2>
+        <div class="header-actions">
+          <button class="btn btn-small" onclick="usage.load()">Refresh</button>
+        </div>
+      </header>
+      <div class="content" id="usage-content">
+        <!-- Header Cards -->
+        <div class="usage-cards">
+          <div class="usage-card">
+            <div class="usage-card-value" id="usage-cost-mtd">$0.00</div>
+            <div class="usage-card-label">Cost (MTD)</div>
+          </div>
+          <div class="usage-card">
+            <div class="usage-card-value" id="usage-tokens-mtd">0</div>
+            <div class="usage-card-label">Tokens (MTD)</div>
+          </div>
+          <div class="usage-card">
+            <div class="usage-card-value" id="usage-providers">0</div>
+            <div class="usage-card-label">Providers</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="usage-charts">
+          <div class="usage-chart-box">
+            <h3>Daily Cost (30 days)</h3>
+            <div class="chart-container">
+              <canvas id="usage-daily-chart"></canvas>
+            </div>
+          </div>
+          <div class="usage-chart-box usage-chart-small">
+            <h3>By Provider</h3>
+            <div class="chart-container chart-container-small">
+              <canvas id="usage-provider-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Calls Table -->
+        <div class="usage-table-wrap">
+          <h3>Recent Calls</h3>
+          <div class="usage-table-scroll">
+            <table class="usage-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Task</th>
+                  <th>Tokens</th>
+                  <th>Cost</th>
+                </tr>
+              </thead>
+              <tbody id="usage-recent-body">
+                <tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Files Screen -->
     <div id="screen-files" class="screen">
       <header class="app-header">
@@ -200,6 +265,10 @@
         <span class="nav-icon">&#9881;</span>
         <span class="nav-label">Chat</span>
       </button>
+      <button class="nav-btn" data-screen="usage" onclick="navigate('usage')">
+        <span class="nav-icon">&#9636;</span>
+        <span class="nav-label">Usage</span>
+      </button>
       <button class="nav-btn" data-screen="files" onclick="navigate('files')">
         <span class="nav-icon">&#128193;</span>
         <span class="nav-label">Files</span>
@@ -208,11 +277,13 @@
   </div>
 
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/inbox.js"></script>
   <script src="js/chat.js"></script>
+  <script src="js/usage.js"></script>
   <script src="js/files.js"></script>
   <script src="js/app.js"></script>
 </body>

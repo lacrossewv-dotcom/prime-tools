@@ -23,6 +23,15 @@ import time
 import glob as globmod
 from pathlib import Path
 
+# Usage logging — add parent dirs so usage_logger.py can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # ~/.google_workspace_mcp
+from usage_logger import log_usage
+
+# Fix Windows Unicode output crash (arrows, superscripts, etc.)
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 # Config file location
 CONFIG_PATH = Path(__file__).parent / "gemini_config.json"
 
@@ -71,6 +80,9 @@ def read_input(input_arg):
         # Handle PDFs
         if path.suffix.lower() == '.pdf':
             return {"type": "pdf", "path": str(path)}
+        # Handle DOCX (binary document — route through multimodal upload)
+        if path.suffix.lower() == '.docx':
+            return {"type": "docx", "path": str(path)}
         # Handle audio files
         if path.suffix.lower() in ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma']:
             return {"type": "audio", "path": str(path)}
@@ -94,14 +106,49 @@ def retry_on_rate_limit(func, *args, max_retries=3, **kwargs):
                 raise
 
 
+# Global flag — set by --quiet CLI arg
+_quiet = False
+
+
+def generate_and_log(client, model, contents, task_name, **gen_kwargs):
+    """Wrapper: call generate_content, extract usage, log it, return response."""
+    response = retry_on_rate_limit(
+        client.models.generate_content, model=model, contents=contents, **gen_kwargs
+    )
+
+    # Extract usage metadata (available on most Gemini responses)
+    input_tokens = 0
+    output_tokens = 0
+    try:
+        usage = response.usage_metadata
+        if usage:
+            input_tokens = getattr(usage, 'prompt_token_count', 0) or 0
+            output_tokens = getattr(usage, 'candidates_token_count', 0) or 0
+    except Exception:
+        pass
+
+    log_usage("gemini", model, task_name,
+              input_tokens=input_tokens, output_tokens=output_tokens)
+
+    if not _quiet and (input_tokens or output_tokens):
+        print(f"[usage] gemini/{model} {task_name}: {input_tokens} in / {output_tokens} out",
+              file=sys.stderr)
+
+    return response
+
+
 def task_ask(client, model, prompt, **kwargs):
     """Simple question/answer."""
-    response = retry_on_rate_limit(client.models.generate_content, model=model, contents=prompt)
+    response = generate_and_log(client, model, prompt, "ask")
     return response.text
 
 
 def task_summarize(client, model, input_data, **kwargs):
-    """Summarize text content."""
+    """Summarize text or document content."""
+    if input_data["type"] in ["docx", "pdf", "image"]:
+        # Route binary files through OCR first, then summarize
+        text = task_ocr(client, model, input_data)
+        input_data = {"type": "text", "content": text}
     if input_data["type"] != "text":
         return "ERROR: Summarize only works with text input"
 
@@ -112,7 +159,7 @@ TEXT:
 
 SUMMARY:"""
 
-    response = client.models.generate_content(model=model, contents=prompt)
+    response = generate_and_log(client, model, prompt, "summarize")
     return response.text
 
 
@@ -132,7 +179,7 @@ TEXT:
 
 CATEGORY:"""
 
-    response = client.models.generate_content(model=model, contents=prompt)
+    response = generate_and_log(client, model, prompt, "classify")
     return response.text.strip()
 
 
@@ -150,14 +197,14 @@ SOURCE TEXT:
 
 EXTRACTED:"""
 
-    response = client.models.generate_content(model=model, contents=full_prompt)
+    response = generate_and_log(client, model, full_prompt, "extract")
     return response.text
 
 
 def task_ocr(client, model, input_data, **kwargs):
-    """OCR an image using Gemini's multimodal capability."""
-    if input_data["type"] not in ["image", "pdf"]:
-        return "ERROR: OCR requires an image or PDF file"
+    """OCR an image, PDF, or DOCX using Gemini's multimodal capability."""
+    if input_data["type"] not in ["image", "pdf", "docx"]:
+        return "ERROR: OCR requires an image, PDF, or DOCX file"
 
     from google.genai import types
 
@@ -172,19 +219,17 @@ def task_ocr(client, model, input_data, **kwargs):
     mime_map = {
         '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
         '.gif': 'image/gif', '.bmp': 'image/bmp', '.webp': 'image/webp',
-        '.tiff': 'image/tiff', '.pdf': 'application/pdf'
+        '.tiff': 'image/tiff', '.pdf': 'application/pdf',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     }
     mime_type = mime_map.get(ext, 'application/octet-stream')
 
-    prompt = "Extract ALL text from this image. Preserve formatting, tables, and structure as much as possible. If there are handwritten elements, transcribe them too."
+    prompt = "Extract ALL text from this document. Preserve formatting, tables, and structure as much as possible. If there are handwritten elements, transcribe them too."
 
-    response = client.models.generate_content(
-        model=model,
-        contents=[
-            prompt,
-            types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
-        ]
-    )
+    response = generate_and_log(client, model, [
+        prompt,
+        types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+    ], "ocr")
     return response.text
 
 
@@ -233,7 +278,7 @@ Respond ONLY with valid JSON. No markdown, no explanation, just the JSON object.
 SOURCE TEXT:
 {text}"""
 
-    response = client.models.generate_content(model=model, contents=full_prompt)
+    response = generate_and_log(client, model, full_prompt, "json-extract")
     # Try to clean response
     result = response.text.strip()
     if result.startswith("```"):
@@ -263,8 +308,13 @@ def main():
     parser.add_argument("--categories", help="Comma-separated categories (for classify)")
     parser.add_argument("--pattern", default="*.txt", help="File pattern (for batch tasks)")
     parser.add_argument("--output", help="Output file path (optional, otherwise stdout)")
+    parser.add_argument("--quiet", "-q", action="store_true",
+                        help="Suppress usage stats on stderr (still logs to JSONL)")
 
     args = parser.parse_args()
+
+    global _quiet
+    _quiet = args.quiet
 
     model = args.model or get_default_model()
     client = get_client()
